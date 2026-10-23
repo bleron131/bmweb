@@ -60,6 +60,13 @@
   }
 }
 
+/* ---------- Lenis (sanftes Scrollen), Regeln aus lenis.css ---------- */
+html.lenis,
+html.lenis body { height: auto; }
+.lenis:not(.lenis-autoToggle).lenis-stopped { overflow: clip; }
+.lenis [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-smooth iframe { pointer-events: none; }
+
 /* ---------- Basis ---------- */
 *,
 *::before,
@@ -459,61 +466,34 @@ main:focus { outline: none; }
 /* Bewegte Elemente erst nach dem Aufteilen zeigen */
 .motion [data-split] { visibility: hidden; }
 
-/* ---------- Startseite: Hero mit Pixel-Feld ---------- */
-.hero { padding-top: 8px; }
+/* ---------- Startseite: ruhiger Einstieg ---------- */
+.hero { padding-top: clamp(40px, 8vw, 110px); }
 
-.hero-frame {
-  --visual-h: 300px;              /* Höhe des Pixel-Bereichs auf dem Handy (setzt script.js) */
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--radius);
-  background: var(--surface);
-  border: 1px solid var(--line);
+.hero-title {
+  margin: 0 0 clamp(32px, 5vw, 56px);
+  font-size: clamp(2.6rem, 9vw, 7.4rem);
+  line-height: 1;
+  letter-spacing: -0.045em;
 }
-
-.hero-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  touch-action: pan-y;
-}
-
-.hero-content {
-  position: relative;
-  z-index: 2;
-  padding: var(--visual-h) 20px 28px;
-  pointer-events: none;           /* Maus erreicht das Pixel-Feld … */
-}
-.hero-content a,
-.hero-content button { pointer-events: auto; }   /* … Buttons bleiben klickbar */
-
-.hero-title { margin-bottom: 18px; }
 .hero-line { display: block; }
-.hero-word {
-  display: block;
-  color: var(--pixel-accent);
-  white-space: nowrap;
-}
-.hero-word-text { display: inline-block; min-height: 1.1em; }
+.hero-word { display: block; color: var(--pixel-accent); white-space: nowrap; }
+.hero-word-text { display: inline-block; min-height: 1em; }
 
-.hero-content .lead { color: var(--fg); margin-bottom: 26px; }
-
-.hero-hints {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 22px;
-  margin-top: 28px;
-  font-size: 0.92rem;
-  font-weight: 500;
+.hero-bottom {
+  display: grid;
+  gap: 28px;
+  padding-top: clamp(24px, 3vw, 36px);
+  border-top: 1px solid var(--line);
 }
-.hero-hints li { display: flex; align-items: center; gap: 8px; }
+.hero-bottom .lead { color: var(--fg); margin-bottom: 26px; }
+
+.hero-hints { display: grid; gap: 12px; font-size: 0.95rem; font-weight: 500; align-content: start; }
+.hero-hints li { display: flex; align-items: center; gap: 10px; }
 .hero-hints svg { width: 18px; height: 18px; flex: none; color: var(--pixel-accent); }
 
-@media (min-width: 960px) {
-  .hero-frame { min-height: clamp(580px, 84vh, 760px); display: flex; align-items: center; }
-  .hero-content { width: 56%; padding: 56px; }
-  .hero-hints { flex-direction: column; }
+@media (min-width: 900px) {
+  .hero-bottom { grid-template-columns: 1.4fr 1fr; gap: 64px; }
+  .hero-hints { justify-self: end; }
 }
 
 /* ---------- Skills auf geschwungener Linie ---------- */

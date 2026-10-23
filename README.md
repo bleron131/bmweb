@@ -11,7 +11,7 @@ Reines HTML, CSS und JavaScript – kein Framework, kein Build-Tool.
 | `style.css` | Gemeinsames Design (hell/dunkel, Handy bis PC) |
 | `script.js` | **Oben die Konfig-Liste** (Texte, Preise, Projekte, Fragen, Kontakt), darunter die Logik |
 | `assets/` | Favicon und Projektbilder (Platzhalter) |
-| `vendor/` | GSAP 3.15 (mit ScrollTrigger und SplitText) und Lenis 1.3.27, lokal abgelegt |
+| `vendor/` | GSAP 3.15 (ScrollTrigger, SplitText, ScrambleText) und Lenis 1.3.27. Fehlt der Ordner, lädt `script.js` die gleichen Dateien von jsDelivr. |
 
 ## Verwendete Bibliotheken und Effekte
 
@@ -22,7 +22,7 @@ Leitidee: **Pixel für Pixel**. Webseiten bestehen aus Pixeln, darum bauen sich 
   - Inhalte blenden beim Scrollen ein.
   - Das Wort im Titel und die kleinen Titel «entschlüsseln» sich.
   - Projektbilder fahren wie ein Vorhang auf.
-- **[Lenis](https://github.com/darkroomengineering/lenis)**: sanftes Scrollen. Die Scroll-Geschwindigkeit steuert auch das Pixel-Feld und die Skill-Linie.
+- **[Lenis](https://github.com/darkroomengineering/lenis)**: sanftes Scrollen. Die Scroll-Geschwindigkeit steuert auch die Skill-Linie.
 - **[React Bits](https://github.com/DavidHDev/react-bits)**: Vorlage für die Effekte, mit GSAP ohne React nachgebaut:
   - *Curved Loop*: Skills auf einer geschwungenen Linie, mit der Maus ziehbar.
   - *Decrypted Text*: Text «entschlüsselt» sich.
@@ -30,9 +30,9 @@ Leitidee: **Pixel für Pixel**. Webseiten bestehen aus Pixeln, darum bauen sich 
   - *Text Pressure*: Der Footer-Titel dehnt sich zur Maus hin.
   - *Magnet*: Buttons ziehen leicht zur Maus.
 
-**Startseite:** Ein Pixel-Feld (Canvas) setzt sich zu einem Symbol zusammen, passend zum Wort im Titel: Schere → Coiffeursalons, Ball → Sportvereine, Tasche → Hofläden, Browserfenster → Selbstständige. Die Pixel weichen der Maus aus. Wörter und Symbole änderst du in `script.js` unter `CONFIG.pages.start.words`. Die Symbole selbst stehen in `PIXEL_ICONS`.
+**Startseite:** ruhiger Einstieg mit grosser Schrift. Das Wort im Titel wechselt (Coiffeursalons, Sportvereine, Hofläden, Selbstständige). Die Wörter änderst du in `script.js` unter `CONFIG.pages.start.words`.
 
-Wer in den Systemeinstellungen «Bewegung reduzieren» eingeschaltet hat (unter Windows: *Animationseffekte* aus), bekommt keine Animationen und kein Lenis. Dann steht ein ruhiges Pixel-Symbol da.
+Wer in den Systemeinstellungen «Bewegung reduzieren» eingeschaltet hat (unter Windows: *Animationseffekte* aus), bekommt keine Animationen und kein Lenis. Der Titel steht dann fest da.
 
 ## Lokal öffnen
 

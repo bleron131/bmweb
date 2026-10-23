@@ -150,17 +150,10 @@ const CONFIG = {
   pages: {
     start: {
       eyebrow: 'Bleron Mustafa · Webseiten aus der Schweiz',
-      // Titel: «Webseiten für» + wechselndes Wort. Zu jedem Wort gehört ein Pixel-Symbol
-      // (scissors = Schere, ball = Ball, bag = Tasche, browser = Browserfenster).
+      // Titel: «Webseiten für» + ein Wort, das regelmässig wechselt
       titleStart: 'Webseiten für',
-      words: [
-        { word: 'Coiffeursalons.', icon: 'scissors' },
-        { word: 'Sportvereine.', icon: 'ball' },
-        { word: 'Hofläden.', icon: 'bag' },
-        { word: 'Selbstständige.', icon: 'browser' },
-      ],
+      words: ['Coiffeursalons.', 'Sportvereine.', 'Hofläden.', 'Selbstständige.'],
       titleStatic: 'Webseiten für kleine Firmen, Vereine und Selbstständige.', // für Screenreader und ohne Animation
-      staticIcon: 'browser',
       lead: 'Ich baue Webseiten für kleine Firmen, Vereine und Selbstständige – von Hand programmiert oder mit WordPress und Wix.',
       ctaPrimary: 'Seite zusammenstellen',
       ctaSecondary: 'Meine Projekte',
@@ -291,6 +284,7 @@ const CONFIG = {
         { h: 'Formulare (Formspree)', html: '<p>Die Formulare werden über den Dienst Formspree (Formspree Inc., USA) an mich weitergeleitet. Dabei werden deine Angaben auf Servern von Formspree verarbeitet. Mehr dazu: <a href="https://formspree.io/legal/privacy-policy" rel="noopener">Datenschutzerklärung von Formspree</a>.</p>' },
         { h: 'Warenkorb im Browser', html: '<p>Der Warenkorb wird nur in deinem Browser gespeichert (localStorage). Diese Daten werden nicht an mich übertragen, bis du eine Anfrage abschickst. Du kannst sie jederzeit löschen, indem du den Warenkorb leerst oder die Browserdaten löschst. Cookies verwende ich keine.</p>' },
         { h: 'Schriften (Google Fonts)', html: '<p>Diese Seite lädt die Schrift «Be Vietnam Pro» von Google Fonts (Google LLC, USA). Dabei wird deine IP-Adresse an Google übermittelt.</p>' },
+        { h: 'Programm-Bibliotheken (jsDelivr)', html: '<p>Die Animations-Bibliotheken liegen auf meinem Server. Nur falls sie dort nicht geladen werden können, holt die Seite sie vom Dienst jsDelivr. Dabei wird deine IP-Adresse an jsDelivr übermittelt.</p>' },
         { h: 'Hosting', html: '<p>Diese Seite wird bei [Hosting-Anbieter, z. B. GitHub Pages oder Netlify] gehostet. Der Anbieter speichert technisch notwendige Daten wie die IP-Adresse in Server-Logfiles.</p>' },
         { h: 'Deine Rechte', html: '<p>Du kannst jederzeit Auskunft über deine Daten verlangen, sie berichtigen oder löschen lassen. Schreib mir dafür eine E-Mail.</p>' },
         { h: 'Stand', html: '<p>[Monat Jahr]</p>' },
@@ -306,7 +300,7 @@ const CONFIG = {
 
 const STORAGE_KEY = 'bm-warenkorb-v1';
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const canAnimate = !prefersReducedMotion && typeof window.gsap !== 'undefined' && typeof window.ScrambleTextPlugin !== 'undefined';
+let canAnimate = false; // wird in boot() gesetzt, sobald GSAP geladen ist
 const page = document.body.dataset.page || 'start';
 
 let lenis = null;
@@ -706,28 +700,27 @@ const Pages = {
     const c = CONFIG.pages.start;
     return `
       <section class="container hero">
-        <div class="hero-frame" data-hero>
-          <canvas class="hero-canvas" aria-hidden="true"></canvas>
-          <div class="hero-content">
-            <span class="eyebrow" data-reveal data-scramble>${esc(c.eyebrow)}</span>
-            <h1 class="hero-title">
-              <span class="visually-hidden">${esc(c.titleStatic)}</span>
-              <span aria-hidden="true">
-                ${canAnimate
-                  ? `<span class="hero-line" data-split>${esc(c.titleStart)}</span>
-                     <span class="hero-word"><span class="hero-word-text">${esc(c.words[0].word)}</span></span>`
-                  : `<span class="hero-line">${esc(c.titleStatic)}</span>`}
-              </span>
-            </h1>
+        <span class="eyebrow" data-reveal data-scramble>${esc(c.eyebrow)}</span>
+        <h1 class="hero-title">
+          <span class="visually-hidden">${esc(c.titleStatic)}</span>
+          <span aria-hidden="true">
+            ${canAnimate
+              ? `<span class="hero-line" data-split>${esc(c.titleStart)}</span>
+                 <span class="hero-word"><span class="hero-word-text">${esc(c.words[0])}</span></span>`
+              : `<span class="hero-line">${esc(c.titleStatic)}</span>`}
+          </span>
+        </h1>
+        <div class="hero-bottom">
+          <div>
             <p class="lead" data-reveal>${esc(c.lead)}</p>
             <div class="btn-row" data-reveal>
               <a class="btn btn--primary" href="angebot.html" data-magnet>${esc(c.ctaPrimary)} ${ICONS.arrow}</a>
               <a class="btn btn--ghost" href="projekte.html">${esc(c.ctaSecondary)}</a>
             </div>
-            <ul class="hero-hints" data-reveal>
-              ${c.hints.map((h) => `<li>${ICONS[h.icon]}<span>${esc(h.text)}</span></li>`).join('')}
-            </ul>
           </div>
+          <ul class="hero-hints" data-reveal>
+            ${c.hints.map((h) => `<li>${ICONS[h.icon]}<span>${esc(h.text)}</span></li>`).join('')}
+          </ul>
         </div>
       </section>
 
@@ -1370,268 +1363,21 @@ function initForms() {
   });
 }
 
-/* =========================================================
-   Startseite: Pixel-Feld
-   Kleine Quadrate setzen sich zu einem Symbol zusammen, das zum
-   Wort im Titel passt. Sie weichen der Maus aus und fliegen beim
-   schnellen Scrollen kurz auseinander.
-   ========================================================= */
+/* ---------- Startseite: Wort im Titel wechselt (Decrypted Text) ---------- */
+function initHeroWords() {
+  const wordEl = $('.hero-word-text');
+  if (!wordEl || !canAnimate) return;
+  const { words } = CONFIG.pages.start;
+  let index = 0;
 
-// Zeichen-Helfer für die Symbole
-const draw = {
-  line(c, x1, y1, x2, y2) { c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); },
-  ring(c, x, y, r) { c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.stroke(); },
-  dot(c, x, y, r) { c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill(); },
-  poly(c, pts) { c.beginPath(); pts.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke(); },
-};
-
-// Symbole in einem 160 × 160 Feld. Schwarz = Hauptfarbe, Rot = Akzentfarbe.
-const PIXEL_ICONS = {
-  scissors(c) {
-    c.lineCap = 'round';
-    c.strokeStyle = '#000'; c.lineWidth = 13;
-    draw.line(c, 58, 60, 142, 118);
-    draw.line(c, 58, 100, 142, 42);
-    c.strokeStyle = '#f00'; c.lineWidth = 11;
-    draw.ring(c, 40, 46, 20);
-    draw.ring(c, 40, 114, 20);
-    c.fillStyle = '#000'; draw.dot(c, 100, 80, 8);
-  },
-  ball(c) {
-    c.strokeStyle = '#000'; c.lineWidth = 11;
-    draw.ring(c, 80, 80, 62);
-    const corners = Array.from({ length: 5 }, (_, i) => {
-      const a = -Math.PI / 2 + (i * Math.PI * 2) / 5;
-      return [80 + Math.cos(a) * 24, 80 + Math.sin(a) * 24, a];
-    });
-    c.lineWidth = 8;
-    corners.forEach(([x, y, a]) => draw.line(c, x, y, 80 + Math.cos(a) * 62, 80 + Math.sin(a) * 62));
-    c.fillStyle = '#f00';
-    c.beginPath();
-    corners.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
-    c.closePath();
-    c.fill();
-  },
-  bag(c) {
-    c.strokeStyle = '#000'; c.lineWidth = 10;
-    c.beginPath(); c.arc(80, 54, 24, Math.PI, 0); c.stroke();
-    c.lineWidth = 11;
-    c.beginPath(); c.roundRect(24, 54, 112, 94, 12); c.stroke();
-    c.fillStyle = '#f00'; draw.dot(c, 80, 104, 19);
-    c.strokeStyle = '#f00'; c.lineWidth = 6; c.lineCap = 'round';
-    draw.line(c, 80, 86, 90, 72);
-  },
-  browser(c) {
-    c.strokeStyle = '#000'; c.lineWidth = 10;
-    c.beginPath(); c.roundRect(12, 24, 136, 112, 12); c.stroke();
-    c.lineWidth = 8; draw.line(c, 12, 52, 148, 52);
-    c.fillStyle = '#f00'; [30, 45, 60].forEach((x) => draw.dot(c, x, 38, 5));
-    c.lineCap = 'round'; c.lineJoin = 'round'; c.lineWidth = 10;
-    draw.poly(c, [[60, 76], [44, 94], [60, 112]]);
-    draw.poly(c, [[100, 76], [116, 94], [100, 112]]);
-    c.strokeStyle = '#f00'; draw.line(c, 88, 72, 72, 116);
-  },
-};
-
-// Symbol abtasten: liefert Punkte (0–1) auf einem Raster
-function sampleIcon(name, step) {
-  const S = 160;
-  const off = document.createElement('canvas');
-  off.width = S; off.height = S;
-  const c = off.getContext('2d', { willReadFrequently: true });
-  PIXEL_ICONS[name](c);
-  const data = c.getImageData(0, 0, S, S).data;
-  const pts = [];
-  for (let y = step / 2; y < S; y += step) {
-    for (let x = step / 2; x < S; x += step) {
-      const i = (Math.floor(y) * S + Math.floor(x)) * 4;
-      if (data[i + 3] > 120) pts.push({ x: x / S, y: y / S, accent: data[i] > 128 });
-    }
-  }
-  return pts;
-}
-
-function initPixelHero() {
-  const frame = $('[data-hero]');
-  if (!frame) return;
-  const canvas = $('.hero-canvas', frame);
-  const ctx = canvas.getContext('2d');
-  const wordEl = $('.hero-word-text', frame);
-  const { words, staticIcon } = CONFIG.pages.start;
-  const desktop = window.matchMedia('(min-width: 960px)');
-
-  let W = 0, H = 0, gap = 8, targets = [], dots = [], grid = [], colors = {};
-  let index = 0, running = false, timer = null, scrollKick = 0, lastSize = '';
-  const pointer = { x: -9999, y: -9999 };
-
-  function readColors() {
-    const s = getComputedStyle(document.documentElement);
-    colors = {
-      main: s.getPropertyValue('--fg').trim(),
-      accent: s.getPropertyValue('--pixel-accent').trim(),
-      grid: s.getPropertyValue('--line-strong').trim(),
-    };
-  }
-
-  // Grösse und Position des Symbols berechnen
-  function layout() {
-    const r = frame.getBoundingClientRect();
-    W = r.width; H = r.height;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.round(W * dpr);
-    canvas.height = Math.round(H * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-    let size, cx, cy;
-    if (desktop.matches) {
-      size = Math.min(H * 0.66, W * 0.36);
-      cx = W * 0.74; cy = H * 0.5;
-    } else {
-      size = Math.min(W - 72, 250);
-      cx = W / 2; cy = 28 + size / 2;
-      frame.style.setProperty('--visual-h', `${size + 56}px`);
-    }
-    gap = size / 36;
-
-    const step = (160 * gap) / size;
-    targets = Object.keys(PIXEL_ICONS).reduce((all, name) => {
-      all[name] = sampleIcon(name, step).map((p) => ({
-        x: cx - size / 2 + p.x * size,
-        y: cy - size / 2 + p.y * size,
-        accent: p.accent,
-      }));
-      return all;
-    }, {});
-
-    // Hintergrund-Raster aus feinen Punkten
-    grid = [];
-    const g = desktop.matches ? 30 : 26;
-    for (let y = g / 2; y < H; y += g) for (let x = g / 2; x < W; x += g) grid.push({ x, y, ox: 0, oy: 0 });
-
-    // Genug Pixel für das grösste Symbol
-    const need = Math.max(...Object.values(targets).map((t) => t.length));
-    while (dots.length < need) {
-      dots.push({ x: Math.random() * W, y: Math.random() * H, vx: 0, vy: 0, tx: 0, ty: 0, delay: 0, accent: false, z: 0.3 + Math.random() }); 
-    }
-    dots.length = need;
-  }
-
-  // Pixel auf ein Symbol verteilen (zufällige Reihenfolge = schöner Flug)
-  function assign(name, { burst = false, intro = false } = {}) {
-    const pts = targets[name];
-    const order = pts.map((_, i) => i).sort(() => Math.random() - 0.5);
-    dots.forEach((d, i) => {
-      d.pi = order[i % pts.length];
-      const p = pts[d.pi];
-      d.tx = p.x; d.ty = p.y; d.accent = p.accent;
-      d.delay = intro ? 8 + Math.random() * 50 : burst ? Math.random() * 22 : 0;
-      if (burst) { d.vx += (Math.random() - 0.5) * 16; d.vy += (Math.random() - 0.5) * 16; }
-    });
-  }
-
-  // Nach einer Grössenänderung: gleiche Zuordnung, nur neue Positionen
-  function retarget(name) {
-    const pts = targets[name];
-    dots.forEach((d, i) => {
-      const p = pts[(d.pi ?? i) % pts.length];
-      d.tx = p.x; d.ty = p.y; d.accent = p.accent;
-    });
-  }
-
-  function paint() {
-    ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = colors.grid;
-    grid.forEach((g) => ctx.fillRect(g.x + g.ox - 1, g.y + g.oy - 1, 2, 2));
-    const sq = gap * 0.72;
-    ctx.fillStyle = colors.main;
-    dots.forEach((d) => { if (!d.accent) ctx.fillRect(d.x - sq / 2, d.y - sq / 2, sq, sq); });
-    ctx.fillStyle = colors.accent;
-    dots.forEach((d) => { if (d.accent) ctx.fillRect(d.x - sq / 2, d.y - sq / 2, sq, sq); });
-  }
-
-  // Ein Bild der Animation berechnen
-  function tick() {
-    const GR = 120, PR = 90;
-    grid.forEach((g) => {
-      const dx = g.x - pointer.x, dy = g.y - pointer.y, d2 = dx * dx + dy * dy;
-      let tx = 0, ty = 0;
-      if (d2 < GR * GR) {
-        const dist = Math.sqrt(d2) || 1, f = (1 - dist / GR) * 16;
-        tx = (dx / dist) * f; ty = (dy / dist) * f;
-      }
-      g.ox += (tx - g.ox) * 0.12; g.oy += (ty - g.oy) * 0.12;
-    });
-
-    dots.forEach((d) => {
-      if (d.delay > 0) d.delay -= 1;
-      else { d.vx += (d.tx - d.x) * 0.045; d.vy += (d.ty - d.y) * 0.045; }
-      const dx = d.x - pointer.x, dy = d.y - pointer.y, d2 = dx * dx + dy * dy;
-      if (d2 < PR * PR) {
-        const dist = Math.sqrt(d2) || 1, f = (1 - dist / PR) * 4.5;
-        d.vx += (dx / dist) * f; d.vy += (dy / dist) * f;
-      }
-      d.vy += scrollKick * d.z;
-      d.vx *= 0.84; d.vy *= 0.84;
-      d.x += d.vx; d.y += d.vy;
-    });
-    scrollKick *= 0.88;
-    paint();
-  }
-
-  function nextWord() {
-    index = (index + 1) % words.length;
-    gsap.to(wordEl, { duration: 1, ease: 'none', scrambleText: { text: words[index].word, chars: 'lowerCase', speed: 0.5, revealDelay: 0.3 } });
-    assign(words[index].icon, { burst: true });
-    timer = gsap.delayedCall(3.6, nextWord);
-  }
-
-  readColors();
-  layout();
-
-  // Ohne Bewegung: ein ruhiges Symbol, fertig
-  if (!canAnimate) {
-    assign(staticIcon);
-    dots.forEach((d) => { d.x = d.tx; d.y = d.ty; });
-    paint();
-    const redraw = () => { readColors(); layout(); assign(staticIcon); dots.forEach((d) => { d.x = d.tx; d.y = d.ty; }); paint(); };
-    new ResizeObserver(redraw).observe(frame);
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redraw);
-    return;
-  }
-
-  assign(words[0].icon, { intro: true });
   gsap.from(wordEl, { duration: 1.2, delay: 0.3, ease: 'none', scrambleText: { text: '', chars: 'lowerCase', speed: 0.5 } });
-  gsap.ticker.add(() => { if (running) tick(); });
-  timer = gsap.delayedCall(4, nextWord);
 
-  // Nur rechnen, wenn das Feld sichtbar ist
-  new IntersectionObserver(([entry]) => {
-    running = entry.isIntersecting;
-    if (running) timer?.resume(); else timer?.pause();
-  }).observe(frame);
-  document.addEventListener('visibilitychange', () => (document.hidden ? timer?.pause() : timer?.resume()));
-
-  // Maus / Finger
-  frame.addEventListener('pointermove', (e) => {
-    const r = frame.getBoundingClientRect();
-    pointer.x = e.clientX - r.left; pointer.y = e.clientY - r.top;
-  });
-  const reset = () => { pointer.x = -9999; pointer.y = -9999; };
-  frame.addEventListener('pointerleave', reset);
-  frame.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') setTimeout(reset, 250); });
-  frame.addEventListener('pointercancel', reset);
-
-  // Schnelles Scrollen schüttelt die Pixel
-  if (lenis) lenis.on('scroll', ({ velocity }) => { scrollKick = Math.max(-5, Math.min(5, velocity * 0.18)); });
-
-  new ResizeObserver(() => {
-    const size = `${frame.clientWidth}x${frame.clientHeight}`;
-    if (size === lastSize) return;
-    lastSize = size;
-    layout();
-    retarget(words[index].icon);
-  }).observe(frame);
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+  const next = () => {
+    index = (index + 1) % words.length;
+    gsap.to(wordEl, { duration: 1, ease: 'none', scrambleText: { text: words[index], chars: 'lowerCase', speed: 0.5, revealDelay: 0.3 } });
+  };
+  const timer = setInterval(() => { if (!document.hidden) next(); }, 3600);
+  window.addEventListener('pagehide', () => clearInterval(timer));
 }
 
 /* ---------- Skills auf einer geschwungenen Linie (Curved Loop) ---------- */
@@ -1966,7 +1712,7 @@ function init() {
   initMenu();
   initCart();
   initSkipLink();
-  initPixelHero();
+  initHeroWords();
   initConfigurator();
   initProjectFilter();
   renderOrderCart();
@@ -1988,4 +1734,48 @@ function init() {
   });
 }
 
-init();
+/* ---------- Bibliotheken laden ---------- */
+// Zuerst aus dem Ordner vendor/, falls der fehlt von jsDelivr (gleiche Versionen).
+const LIBS = [
+  { name: 'gsap', file: 'gsap.min.js', pkg: 'gsap@3.15.0', ready: () => window.gsap },
+  { name: 'ScrollTrigger', file: 'ScrollTrigger.min.js', pkg: 'gsap@3.15.0', ready: () => window.ScrollTrigger },
+  { name: 'SplitText', file: 'SplitText.min.js', pkg: 'gsap@3.15.0', ready: () => window.SplitText },
+  { name: 'ScrambleText', file: 'ScrambleTextPlugin.min.js', pkg: 'gsap@3.15.0', ready: () => window.ScrambleTextPlugin },
+  { name: 'Lenis', file: 'lenis.min.js', pkg: 'lenis@1.3.27', ready: () => window.Lenis },
+];
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const el = document.createElement('script');
+    el.src = src;
+    el.onload = resolve;
+    el.onerror = () => { el.remove(); reject(new Error(src)); };
+    document.head.appendChild(el);
+  });
+}
+
+async function loadLibs() {
+  for (const lib of LIBS) {
+    if (lib.ready()) continue;
+    try {
+      await loadScript(`vendor/${lib.file}`);
+    } catch (e) {
+      try {
+        await loadScript(`https://cdn.jsdelivr.net/npm/${lib.pkg}/dist/${lib.file}`);
+      } catch (err) {
+        console.warn(`${lib.name} konnte nicht geladen werden – die Seite läuft ohne Animationen.`);
+      }
+    }
+  }
+}
+
+async function boot() {
+  if (!prefersReducedMotion) {
+    // Höchstens 5 Sekunden warten, dann ohne Animationen weiter
+    await Promise.race([loadLibs(), new Promise((r) => setTimeout(r, 5000))]);
+  }
+  canAnimate = !prefersReducedMotion && LIBS.slice(0, 4).every((lib) => lib.ready());
+  init();
+}
+
+boot();
