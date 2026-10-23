@@ -13,13 +13,26 @@ Reines HTML, CSS und JavaScript – kein Framework, kein Build-Tool.
 | `assets/` | Favicon und Projektbilder (Platzhalter) |
 | `vendor/` | GSAP 3.15 (mit ScrollTrigger und SplitText) und Lenis 1.3.27, lokal abgelegt |
 
-## Verwendete Bibliotheken
+## Verwendete Bibliotheken und Effekte
 
-- **[GSAP](https://github.com/greensock/GSAP)**: Animationen. Überschriften erscheinen Wort für Wort (SplitText), Inhalte blenden beim Scrollen ein (ScrollTrigger), die 3D-Szene schwebt.
-- **[Lenis](https://github.com/darkroomengineering/lenis)**: sanftes Scrollen, mit ScrollTrigger verbunden, so wie es im Lenis-README beschrieben ist.
-- **[React Bits](https://github.com/DavidHDev/react-bits)**: Ideen für die Effekte (Split Text, Scroll Reveal, Scroll Velocity für das Laufband, Magnet für die Buttons). React Bits ist für React gebaut. Darum sind die Effekte hier mit GSAP in normalem JavaScript nachgebaut.
+Leitidee: **Pixel für Pixel**. Webseiten bestehen aus Pixeln, darum bauen sich auch die Effekte aus kleinen Quadraten auf.
 
-Wer in den Systemeinstellungen «Bewegung reduzieren» eingeschaltet hat, bekommt keine Animationen und kein Lenis.
+- **[GSAP](https://github.com/greensock/GSAP)** (ScrollTrigger, SplitText, ScrambleText):
+  - Überschriften erscheinen Wort für Wort.
+  - Inhalte blenden beim Scrollen ein.
+  - Das Wort im Titel und die kleinen Titel «entschlüsseln» sich.
+  - Projektbilder fahren wie ein Vorhang auf.
+- **[Lenis](https://github.com/darkroomengineering/lenis)**: sanftes Scrollen. Die Scroll-Geschwindigkeit steuert auch das Pixel-Feld und die Skill-Linie.
+- **[React Bits](https://github.com/DavidHDev/react-bits)**: Vorlage für die Effekte, mit GSAP ohne React nachgebaut:
+  - *Curved Loop*: Skills auf einer geschwungenen Linie, mit der Maus ziehbar.
+  - *Decrypted Text*: Text «entschlüsselt» sich.
+  - *Pixel Transition*: Projektbilder und Seitenwechsel aus Pixel-Blöcken.
+  - *Text Pressure*: Der Footer-Titel dehnt sich zur Maus hin.
+  - *Magnet*: Buttons ziehen leicht zur Maus.
+
+**Startseite:** Ein Pixel-Feld (Canvas) setzt sich zu einem Symbol zusammen, passend zum Wort im Titel: Schere → Coiffeursalons, Ball → Sportvereine, Tasche → Hofläden, Browserfenster → Selbstständige. Die Pixel weichen der Maus aus. Wörter und Symbole änderst du in `script.js` unter `CONFIG.pages.start.words`. Die Symbole selbst stehen in `PIXEL_ICONS`.
+
+Wer in den Systemeinstellungen «Bewegung reduzieren» eingeschaltet hat (unter Windows: *Animationseffekte* aus), bekommt keine Animationen und kein Lenis. Dann steht ein ruhiges Pixel-Symbol da.
 
 ## Lokal öffnen
 

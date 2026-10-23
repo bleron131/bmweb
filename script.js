@@ -150,7 +150,17 @@ const CONFIG = {
   pages: {
     start: {
       eyebrow: 'Bleron Mustafa · Webseiten aus der Schweiz',
-      title: 'Einfache Webseiten, sauber gemacht.',
+      // Titel: «Webseiten für» + wechselndes Wort. Zu jedem Wort gehört ein Pixel-Symbol
+      // (scissors = Schere, ball = Ball, bag = Tasche, browser = Browserfenster).
+      titleStart: 'Webseiten für',
+      words: [
+        { word: 'Coiffeursalons.', icon: 'scissors' },
+        { word: 'Sportvereine.', icon: 'ball' },
+        { word: 'Hofläden.', icon: 'bag' },
+        { word: 'Selbstständige.', icon: 'browser' },
+      ],
+      titleStatic: 'Webseiten für kleine Firmen, Vereine und Selbstständige.', // für Screenreader und ohne Animation
+      staticIcon: 'browser',
       lead: 'Ich baue Webseiten für kleine Firmen, Vereine und Selbstständige – von Hand programmiert oder mit WordPress und Wix.',
       ctaPrimary: 'Seite zusammenstellen',
       ctaSecondary: 'Meine Projekte',
@@ -296,7 +306,7 @@ const CONFIG = {
 
 const STORAGE_KEY = 'bm-warenkorb-v1';
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const canAnimate = !prefersReducedMotion && typeof window.gsap !== 'undefined';
+const canAnimate = !prefersReducedMotion && typeof window.gsap !== 'undefined' && typeof window.ScrambleTextPlugin !== 'undefined';
 const page = document.body.dataset.page || 'start';
 
 let lenis = null;
@@ -345,9 +355,9 @@ const ICONS = {
   hand: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h4l3 3h3a2 2 0 0 0 0-4h-2"/><path d="M8 12V8l6-3 6 3v8l-6 3-3-1.5"/></svg>',
   logo: '<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="9" fill="currentColor"/><path d="M9 25V15a7 7 0 0 1 14 0v10" fill="none" stroke="var(--bg)" stroke-width="2.4"/><path d="M13 25v-9a3 3 0 0 1 6 0v9" fill="none" stroke="var(--bg)" stroke-width="2.4"/></svg>',
   // Leistungs-Symbole aus flachen Flächen
-  code: '<svg class="card-icon" viewBox="0 0 44 44" aria-hidden="true"><rect x="2" y="6" width="40" height="32" rx="6" class="sc-d"/><path d="M17 16l-6 6 6 6M27 16l6 6-6 6" fill="none" stroke="var(--fg)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  cms: '<svg class="card-icon" viewBox="0 0 44 44" aria-hidden="true"><rect x="2" y="6" width="40" height="32" rx="6" class="sc-d"/><rect x="8" y="13" width="14" height="18" rx="2" class="sc-a"/><path d="M27 15h10M27 22h10M27 29h6" stroke="var(--fg)" stroke-width="3" stroke-linecap="round"/></svg>',
-  design: '<svg class="card-icon" viewBox="0 0 44 44" aria-hidden="true"><circle cx="16" cy="22" r="13" class="sc-d"/><rect x="22" y="9" width="19" height="26" rx="3" class="sc-a"/><circle cx="16" cy="22" r="4" fill="var(--fg)"/></svg>',
+  code: '<svg class="card-icon" viewBox="0 0 44 44" aria-hidden="true"><rect x="2" y="6" width="40" height="32" rx="6" class="ic-soft"/><path d="M17 16l-6 6 6 6M27 16l6 6-6 6" fill="none" stroke="var(--fg)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  cms: '<svg class="card-icon" viewBox="0 0 44 44" aria-hidden="true"><rect x="2" y="6" width="40" height="32" rx="6" class="ic-soft"/><rect x="8" y="13" width="14" height="18" rx="2" class="ic-accent"/><path d="M27 15h10M27 22h10M27 29h6" stroke="var(--fg)" stroke-width="3" stroke-linecap="round"/></svg>',
+  design: '<svg class="card-icon" viewBox="0 0 44 44" aria-hidden="true"><circle cx="16" cy="22" r="13" class="ic-soft"/><rect x="22" y="9" width="19" height="26" rx="3" class="ic-accent"/><circle cx="16" cy="22" r="4" fill="var(--fg)"/></svg>',
 };
 
 /* ---------- Preise berechnen ---------- */
@@ -465,7 +475,7 @@ function renderLayout() {
     <footer class="site-footer">
       <div class="container">
         <div class="footer-cta">
-          <h2 data-split>${esc(footer.title)}</h2>
+          <h2 data-stretch>${esc(footer.title)}</h2>
           <p>${esc(footer.text)}</p>
           <div class="btn-row">
             <a class="btn btn--primary" href="angebot.html" data-magnet>Seite zusammenstellen ${ICONS.arrow}</a>
@@ -651,7 +661,7 @@ function showToast(message) {
 function pageHead({ eyebrow, title, lead }) {
   return `
     <section class="container page-head">
-      <span class="eyebrow" data-reveal>${esc(eyebrow)}</span>
+      <span class="eyebrow" data-reveal data-scramble>${esc(eyebrow)}</span>
       <h1 data-split>${t(title)}</h1>
       ${lead ? `<p class="lead" data-reveal>${t(lead)}</p>` : ''}
     </section>`;
@@ -660,8 +670,12 @@ function pageHead({ eyebrow, title, lead }) {
 function projectCard(p, headingLevel = 'h3') {
   return `
     <article class="project-card" data-category="${esc(p.category)}" data-reveal>
-      <div class="project-media" data-curtain>
+      <div class="project-media" data-curtain data-pixel-cover>
         <img src="${esc(p.image)}" alt="${esc(p.alt)}" width="800" height="600" loading="lazy">
+        <div class="pixel-cover" aria-hidden="true">
+          <div class="pixel-cover-grid"></div>
+          <span class="pixel-cover-label">${p.url ? 'Projekt ansehen' : 'Link folgt'}</span>
+        </div>
       </div>
       <div class="project-meta"><span>${esc(p.category)}</span><span aria-hidden="true">·</span><span>${esc(p.year)}</span></div>
       <${headingLevel}>${t(p.title)}</${headingLevel}>
@@ -686,29 +700,25 @@ function sheetHtml(pkg, { withButton = false, buttonLabel = '' } = {}) {
     <p class="sheet-note">${esc(CONFIG.pricing.note)}</p>`;
 }
 
-function marqueeHtml() {
-  const items = CONFIG.skills.map((s) => `<li>${esc(s)}</li>`).join('');
-  return `
-    <div class="marquee" data-marquee>
-      <h2 class="visually-hidden">Skills</h2>
-      <div class="marquee-track">
-        <ul class="marquee-list">${items}</ul>
-        <ul class="marquee-list" aria-hidden="true">${items}</ul>
-      </div>
-    </div>`;
-}
-
 /* ---------- Seiten ---------- */
 const Pages = {
   start() {
     const c = CONFIG.pages.start;
     return `
       <section class="container hero">
-        <div class="hero-frame">
-          <div class="hero-scene grain" aria-hidden="true">${sceneSvg()}</div>
+        <div class="hero-frame" data-hero>
+          <canvas class="hero-canvas" aria-hidden="true"></canvas>
           <div class="hero-content">
-            <span class="eyebrow" data-reveal>${esc(c.eyebrow)}</span>
-            <h1 data-split>${esc(c.title)}</h1>
+            <span class="eyebrow" data-reveal data-scramble>${esc(c.eyebrow)}</span>
+            <h1 class="hero-title">
+              <span class="visually-hidden">${esc(c.titleStatic)}</span>
+              <span aria-hidden="true">
+                ${canAnimate
+                  ? `<span class="hero-line" data-split>${esc(c.titleStart)}</span>
+                     <span class="hero-word"><span class="hero-word-text">${esc(c.words[0].word)}</span></span>`
+                  : `<span class="hero-line">${esc(c.titleStatic)}</span>`}
+              </span>
+            </h1>
             <p class="lead" data-reveal>${esc(c.lead)}</p>
             <div class="btn-row" data-reveal>
               <a class="btn btn--primary" href="angebot.html" data-magnet>${esc(c.ctaPrimary)} ${ICONS.arrow}</a>
@@ -721,7 +731,7 @@ const Pages = {
         </div>
       </section>
 
-      ${marqueeHtml()}
+      ${curvedLoopHtml()}
 
       <section class="container section" aria-labelledby="services-title">
         <div class="section-head">
@@ -792,7 +802,7 @@ const Pages = {
         </div>
       </section>
 
-      ${marqueeHtml()}
+      ${curvedLoopHtml()}
 
       <section class="container section" aria-labelledby="tools-title">
         <div class="section-head"><h2 id="tools-title" data-split>${esc(c.toolsTitle)}</h2></div>
@@ -1361,158 +1371,356 @@ function initForms() {
 }
 
 /* =========================================================
-   Startseite: Szene mit Torbogen, Gitterboden und 3D-Objekten
-   (alles flache Farbflächen, keine Verläufe)
+   Startseite: Pixel-Feld
+   Kleine Quadrate setzen sich zu einem Symbol zusammen, das zum
+   Wort im Titel passt. Sie weichen der Maus aus und fliegen beim
+   schnellen Scrollen kurz auseinander.
    ========================================================= */
-function sceneSvg() {
-  const cx = 950;          // Mitte des Torbogens
-  const horizon = 560;     // Horizontlinie
 
-  // Torbogen aus mehreren Linien
-  let arch = '';
-  for (let i = 0; i < 7; i += 1) {
-    const w = 250 - i * 24;
-    arch += `<path class="sc-line" stroke-width="1.5" d="M${cx - w} ${horizon} V300 A${w} ${w} 0 0 1 ${cx + w} 300 V${horizon}"/>`;
+// Zeichen-Helfer für die Symbole
+const draw = {
+  line(c, x1, y1, x2, y2) { c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); },
+  ring(c, x, y, r) { c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.stroke(); },
+  dot(c, x, y, r) { c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill(); },
+  poly(c, pts) { c.beginPath(); pts.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke(); },
+};
+
+// Symbole in einem 160 × 160 Feld. Schwarz = Hauptfarbe, Rot = Akzentfarbe.
+const PIXEL_ICONS = {
+  scissors(c) {
+    c.lineCap = 'round';
+    c.strokeStyle = '#000'; c.lineWidth = 13;
+    draw.line(c, 58, 60, 142, 118);
+    draw.line(c, 58, 100, 142, 42);
+    c.strokeStyle = '#f00'; c.lineWidth = 11;
+    draw.ring(c, 40, 46, 20);
+    draw.ring(c, 40, 114, 20);
+    c.fillStyle = '#000'; draw.dot(c, 100, 80, 8);
+  },
+  ball(c) {
+    c.strokeStyle = '#000'; c.lineWidth = 11;
+    draw.ring(c, 80, 80, 62);
+    const corners = Array.from({ length: 5 }, (_, i) => {
+      const a = -Math.PI / 2 + (i * Math.PI * 2) / 5;
+      return [80 + Math.cos(a) * 24, 80 + Math.sin(a) * 24, a];
+    });
+    c.lineWidth = 8;
+    corners.forEach(([x, y, a]) => draw.line(c, x, y, 80 + Math.cos(a) * 62, 80 + Math.sin(a) * 62));
+    c.fillStyle = '#f00';
+    c.beginPath();
+    corners.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
+    c.closePath();
+    c.fill();
+  },
+  bag(c) {
+    c.strokeStyle = '#000'; c.lineWidth = 10;
+    c.beginPath(); c.arc(80, 54, 24, Math.PI, 0); c.stroke();
+    c.lineWidth = 11;
+    c.beginPath(); c.roundRect(24, 54, 112, 94, 12); c.stroke();
+    c.fillStyle = '#f00'; draw.dot(c, 80, 104, 19);
+    c.strokeStyle = '#f00'; c.lineWidth = 6; c.lineCap = 'round';
+    draw.line(c, 80, 86, 90, 72);
+  },
+  browser(c) {
+    c.strokeStyle = '#000'; c.lineWidth = 10;
+    c.beginPath(); c.roundRect(12, 24, 136, 112, 12); c.stroke();
+    c.lineWidth = 8; draw.line(c, 12, 52, 148, 52);
+    c.fillStyle = '#f00'; [30, 45, 60].forEach((x) => draw.dot(c, x, 38, 5));
+    c.lineCap = 'round'; c.lineJoin = 'round'; c.lineWidth = 10;
+    draw.poly(c, [[60, 76], [44, 94], [60, 112]]);
+    draw.poly(c, [[100, 76], [116, 94], [100, 112]]);
+    c.strokeStyle = '#f00'; draw.line(c, 88, 72, 72, 116);
+  },
+};
+
+// Symbol abtasten: liefert Punkte (0–1) auf einem Raster
+function sampleIcon(name, step) {
+  const S = 160;
+  const off = document.createElement('canvas');
+  off.width = S; off.height = S;
+  const c = off.getContext('2d', { willReadFrequently: true });
+  PIXEL_ICONS[name](c);
+  const data = c.getImageData(0, 0, S, S).data;
+  const pts = [];
+  for (let y = step / 2; y < S; y += step) {
+    for (let x = step / 2; x < S; x += step) {
+      const i = (Math.floor(y) * S + Math.floor(x)) * 4;
+      if (data[i + 3] > 120) pts.push({ x: x / S, y: y / S, accent: data[i] > 128 });
+    }
   }
-
-  // Gitterboden in Perspektive
-  let floor = '';
-  for (let i = -16; i <= 16; i += 1) {
-    floor += `<line class="sc-line" stroke-width="1" x1="${cx + i * 34}" y1="${horizon}" x2="${cx + i * 150}" y2="800"/>`;
-  }
-  for (let k = 0; k <= 9; k += 1) {
-    const y = horizon + 240 * (k / 9) ** 2;
-    floor += `<line class="sc-line" stroke-width="1" x1="0" y1="${y.toFixed(1)}" x2="1400" y2="${y.toFixed(1)}"/>`;
-  }
-
-  // Objekt-Hülle: aussen Maus-Parallax, innen Schweben
-  const obj = (x, y, depth, inner, cls = '') =>
-    `<g class="scene-obj ${cls}" data-depth="${depth}"><g transform="translate(${x} ${y})"><g class="scene-float">${inner}</g></g></g>`;
-
-  const cube = `
-    <polygon class="sc-c" points="0,-60 52,-30 0,0 -52,-30"/>
-    <polygon class="sc-b" points="-52,-30 0,0 0,60 -52,30"/>
-    <polygon class="sc-a" points="0,0 52,-30 52,30 0,60"/>`;
-
-  const planet = `
-    <g transform="rotate(-18)"><path class="sc-stroke-b" stroke-width="7" d="M-96 0 A96 22 0 0 1 96 0"/></g>
-    <circle class="sc-a" r="56"/>
-    <path class="sc-shade" d="M0 -56 A56 56 0 0 1 0 56 A40 56 0 0 0 0 -56Z"/>
-    <circle class="sc-c" cx="-20" cy="-18" r="9" opacity="0.5"/>
-    <g transform="rotate(-18)"><path class="sc-stroke-b" stroke-width="7" d="M-96 0 A96 22 0 0 0 96 0"/></g>`;
-
-  // Server-Turm (isometrische Kiste)
-  const server = `
-    <polygon class="sc-c" points="0,0 -52,-30 -22,-47 29,-17"/>
-    <polygon class="sc-d" points="-52,-30 0,0 0,170 -52,140"/>
-    <polygon class="sc-b" points="0,0 29,-17 29,153 0,170"/>
-    ${[28, 62, 96, 130].map((y) => `
-      <polygon class="sc-a" points="-44,${y - 21} -8,${y} -8,${y + 12} -44,${y - 9}"/>
-      <circle class="sc-c" cx="-14" cy="${y + 1}" r="2.6"/>`).join('')}`;
-
-  // Säule
-  const column = `
-    <rect class="sc-b" x="-34" y="92" width="68" height="14"/>
-    <rect class="sc-c" x="-24" y="-88" width="24" height="180"/>
-    <rect class="sc-b" x="0" y="-88" width="24" height="180"/>
-    <rect class="sc-c" x="-34" y="-104" width="34" height="16"/>
-    <rect class="sc-b" x="0" y="-104" width="34" height="16"/>
-    <ellipse class="sc-d" cx="0" cy="-104" rx="34" ry="8"/>`;
-
-  // Browserfenster
-  const browser = `
-    <g transform="skewY(-8)">
-      <rect class="sc-a" x="-102" y="-66" width="220" height="150" rx="12"/>
-      <rect class="sc-c" x="-110" y="-74" width="220" height="150" rx="12"/>
-      <path class="sc-d" d="M-98 -74 H98 A12 12 0 0 1 110 -62 V-46 H-110 V-62 A12 12 0 0 1 -98 -74Z"/>
-      <circle class="sc-e" cx="-90" cy="-60" r="4"/><circle class="sc-b" cx="-76" cy="-60" r="4"/><circle class="sc-b" cx="-62" cy="-60" r="4"/>
-      <rect class="sc-e" x="-92" y="-30" width="110" height="12" rx="3"/>
-      <rect class="sc-b" x="-92" y="-10" width="150" height="8" rx="3"/>
-      <rect class="sc-b" x="-92" y="4" width="120" height="8" rx="3"/>
-      <rect class="sc-a" x="-92" y="26" width="70" height="26" rx="13"/>
-      <rect class="sc-d" x="30" y="20" width="62" height="40" rx="6"/>
-    </g>`;
-
-  // Code-Symbol </> mit Tiefe
-  const codePaths = 'M-40 -30 L-70 0 L-40 30 M-8 42 L16 -42 M40 -30 L70 0 L40 30';
-  const code = `
-    <path class="sc-stroke-a" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" d="${codePaths}" transform="translate(6 7)"/>
-    <path class="sc-stroke-e" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" d="${codePaths}"/>`;
-
-  // Mauszeiger mit Tiefe
-  const cursorPts = '0,0 0,58 14,45 25,68 35,63 24,41 42,41';
-  const cursor = `
-    <polygon class="sc-a" points="${cursorPts}" transform="translate(6 6)"/>
-    <polygon class="sc-c" points="${cursorPts}" stroke="var(--face-e)" stroke-width="3" stroke-linejoin="round"/>`;
-
-  return `
-    <svg viewBox="0 0 1400 800" preserveAspectRatio="xMidYMid slice" focusable="false">
-      <g class="scene-floor">${floor}</g>
-      <g class="scene-arch">${arch}</g>
-      <ellipse class="sc-d" cx="${cx}" cy="545" rx="120" ry="18" opacity="0.7"/>
-      ${obj(610, 440, 0.35, column, 'hide-sm')}
-      ${obj(1300, 430, 0.4, column, 'hide-sm')}
-      ${obj(745, 360, 0.55, server, 'hide-sm')}
-      ${obj(1215, 175, 0.8, planet)}
-      ${obj(805, 165, 1, browser)}
-      ${obj(1110, 395, 0.7, code, 'hide-sm')}
-      ${obj(950, 470, 0.6, cube)}
-      ${obj(915, 245, 1.2, cursor)}
-    </svg>`;
+  return pts;
 }
 
-function initScene() {
-  const svg = $('.hero-scene svg');
-  if (!svg) return;
+function initPixelHero() {
+  const frame = $('[data-hero]');
+  if (!frame) return;
+  const canvas = $('.hero-canvas', frame);
+  const ctx = canvas.getContext('2d');
+  const wordEl = $('.hero-word-text', frame);
+  const { words, staticIcon } = CONFIG.pages.start;
+  const desktop = window.matchMedia('(min-width: 960px)');
 
-  // Auf kleinen Bildschirmen nur den Ausschnitt mit dem Torbogen zeigen
-  const mq = window.matchMedia('(min-width: 960px)');
-  const setView = () => svg.setAttribute('viewBox', mq.matches ? '0 0 1400 800' : '600 20 700 700');
-  setView();
-  mq.addEventListener('change', setView);
+  let W = 0, H = 0, gap = 8, targets = [], dots = [], grid = [], colors = {};
+  let index = 0, running = false, timer = null, scrollKick = 0, lastSize = '';
+  const pointer = { x: -9999, y: -9999 };
 
-  if (!canAnimate) return;
-
-  // Langsames Schweben
-  const floats = $$('.scene-float', svg);
-  const tweens = floats.map((el, i) => gsap.to(el, {
-    y: i % 2 ? -14 : 12,
-    rotation: i % 3 === 0 ? 3 : -2,
-    transformOrigin: '50% 50%',
-    duration: 3.2 + (i % 4) * 0.7,
-    ease: 'sine.inOut',
-    yoyo: true,
-    repeat: -1,
-    delay: i * 0.2,
-  }));
-
-  // Objekte erscheinen nacheinander
-  gsap.from($$('.scene-obj', svg), { opacity: 0, scale: 0.85, transformOrigin: '50% 50%', duration: 1, stagger: 0.08, ease: 'power3.out', delay: 0.2 });
-  gsap.from($$('.scene-arch path', svg), { opacity: 0, duration: 1.2, stagger: 0.06, ease: 'power2.out' });
-
-  // Am PC folgen die Objekte leicht der Maus
-  if (window.matchMedia('(pointer: fine)').matches) {
-    const movers = $$('.scene-obj', svg).map((el) => ({
-      depth: Number(el.dataset.depth),
-      x: gsap.quickTo(el, 'x', { duration: 1.2, ease: 'power3.out' }),
-      y: gsap.quickTo(el, 'y', { duration: 1.2, ease: 'power3.out' }),
-    }));
-    const frame = $('.hero-frame');
-    frame.addEventListener('pointermove', (e) => {
-      const r = frame.getBoundingClientRect();
-      const dx = (e.clientX - r.left) / r.width - 0.5;
-      const dy = (e.clientY - r.top) / r.height - 0.5;
-      movers.forEach((m) => { m.x(dx * 40 * m.depth); m.y(dy * 28 * m.depth); });
-    });
-    frame.addEventListener('pointerleave', () => movers.forEach((m) => { m.x(0); m.y(0); }));
+  function readColors() {
+    const s = getComputedStyle(document.documentElement);
+    colors = {
+      main: s.getPropertyValue('--fg').trim(),
+      accent: s.getPropertyValue('--pixel-accent').trim(),
+      grid: s.getPropertyValue('--line-strong').trim(),
+    };
   }
 
-  // Animation pausieren, wenn die Szene nicht sichtbar ist
-  ScrollTrigger.create({
-    trigger: '.hero-frame',
-    start: 'top bottom',
-    end: 'bottom top',
-    onToggle: (self) => tweens.forEach((tw) => (self.isActive ? tw.resume() : tw.pause())),
+  // Grösse und Position des Symbols berechnen
+  function layout() {
+    const r = frame.getBoundingClientRect();
+    W = r.width; H = r.height;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    let size, cx, cy;
+    if (desktop.matches) {
+      size = Math.min(H * 0.66, W * 0.36);
+      cx = W * 0.74; cy = H * 0.5;
+    } else {
+      size = Math.min(W - 72, 250);
+      cx = W / 2; cy = 28 + size / 2;
+      frame.style.setProperty('--visual-h', `${size + 56}px`);
+    }
+    gap = size / 36;
+
+    const step = (160 * gap) / size;
+    targets = Object.keys(PIXEL_ICONS).reduce((all, name) => {
+      all[name] = sampleIcon(name, step).map((p) => ({
+        x: cx - size / 2 + p.x * size,
+        y: cy - size / 2 + p.y * size,
+        accent: p.accent,
+      }));
+      return all;
+    }, {});
+
+    // Hintergrund-Raster aus feinen Punkten
+    grid = [];
+    const g = desktop.matches ? 30 : 26;
+    for (let y = g / 2; y < H; y += g) for (let x = g / 2; x < W; x += g) grid.push({ x, y, ox: 0, oy: 0 });
+
+    // Genug Pixel für das grösste Symbol
+    const need = Math.max(...Object.values(targets).map((t) => t.length));
+    while (dots.length < need) {
+      dots.push({ x: Math.random() * W, y: Math.random() * H, vx: 0, vy: 0, tx: 0, ty: 0, delay: 0, accent: false, z: 0.3 + Math.random() }); 
+    }
+    dots.length = need;
+  }
+
+  // Pixel auf ein Symbol verteilen (zufällige Reihenfolge = schöner Flug)
+  function assign(name, { burst = false, intro = false } = {}) {
+    const pts = targets[name];
+    const order = pts.map((_, i) => i).sort(() => Math.random() - 0.5);
+    dots.forEach((d, i) => {
+      d.pi = order[i % pts.length];
+      const p = pts[d.pi];
+      d.tx = p.x; d.ty = p.y; d.accent = p.accent;
+      d.delay = intro ? 8 + Math.random() * 50 : burst ? Math.random() * 22 : 0;
+      if (burst) { d.vx += (Math.random() - 0.5) * 16; d.vy += (Math.random() - 0.5) * 16; }
+    });
+  }
+
+  // Nach einer Grössenänderung: gleiche Zuordnung, nur neue Positionen
+  function retarget(name) {
+    const pts = targets[name];
+    dots.forEach((d, i) => {
+      const p = pts[(d.pi ?? i) % pts.length];
+      d.tx = p.x; d.ty = p.y; d.accent = p.accent;
+    });
+  }
+
+  function paint() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = colors.grid;
+    grid.forEach((g) => ctx.fillRect(g.x + g.ox - 1, g.y + g.oy - 1, 2, 2));
+    const sq = gap * 0.72;
+    ctx.fillStyle = colors.main;
+    dots.forEach((d) => { if (!d.accent) ctx.fillRect(d.x - sq / 2, d.y - sq / 2, sq, sq); });
+    ctx.fillStyle = colors.accent;
+    dots.forEach((d) => { if (d.accent) ctx.fillRect(d.x - sq / 2, d.y - sq / 2, sq, sq); });
+  }
+
+  // Ein Bild der Animation berechnen
+  function tick() {
+    const GR = 120, PR = 90;
+    grid.forEach((g) => {
+      const dx = g.x - pointer.x, dy = g.y - pointer.y, d2 = dx * dx + dy * dy;
+      let tx = 0, ty = 0;
+      if (d2 < GR * GR) {
+        const dist = Math.sqrt(d2) || 1, f = (1 - dist / GR) * 16;
+        tx = (dx / dist) * f; ty = (dy / dist) * f;
+      }
+      g.ox += (tx - g.ox) * 0.12; g.oy += (ty - g.oy) * 0.12;
+    });
+
+    dots.forEach((d) => {
+      if (d.delay > 0) d.delay -= 1;
+      else { d.vx += (d.tx - d.x) * 0.045; d.vy += (d.ty - d.y) * 0.045; }
+      const dx = d.x - pointer.x, dy = d.y - pointer.y, d2 = dx * dx + dy * dy;
+      if (d2 < PR * PR) {
+        const dist = Math.sqrt(d2) || 1, f = (1 - dist / PR) * 4.5;
+        d.vx += (dx / dist) * f; d.vy += (dy / dist) * f;
+      }
+      d.vy += scrollKick * d.z;
+      d.vx *= 0.84; d.vy *= 0.84;
+      d.x += d.vx; d.y += d.vy;
+    });
+    scrollKick *= 0.88;
+    paint();
+  }
+
+  function nextWord() {
+    index = (index + 1) % words.length;
+    gsap.to(wordEl, { duration: 1, ease: 'none', scrambleText: { text: words[index].word, chars: 'lowerCase', speed: 0.5, revealDelay: 0.3 } });
+    assign(words[index].icon, { burst: true });
+    timer = gsap.delayedCall(3.6, nextWord);
+  }
+
+  readColors();
+  layout();
+
+  // Ohne Bewegung: ein ruhiges Symbol, fertig
+  if (!canAnimate) {
+    assign(staticIcon);
+    dots.forEach((d) => { d.x = d.tx; d.y = d.ty; });
+    paint();
+    const redraw = () => { readColors(); layout(); assign(staticIcon); dots.forEach((d) => { d.x = d.tx; d.y = d.ty; }); paint(); };
+    new ResizeObserver(redraw).observe(frame);
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redraw);
+    return;
+  }
+
+  assign(words[0].icon, { intro: true });
+  gsap.from(wordEl, { duration: 1.2, delay: 0.3, ease: 'none', scrambleText: { text: '', chars: 'lowerCase', speed: 0.5 } });
+  gsap.ticker.add(() => { if (running) tick(); });
+  timer = gsap.delayedCall(4, nextWord);
+
+  // Nur rechnen, wenn das Feld sichtbar ist
+  new IntersectionObserver(([entry]) => {
+    running = entry.isIntersecting;
+    if (running) timer?.resume(); else timer?.pause();
+  }).observe(frame);
+  document.addEventListener('visibilitychange', () => (document.hidden ? timer?.pause() : timer?.resume()));
+
+  // Maus / Finger
+  frame.addEventListener('pointermove', (e) => {
+    const r = frame.getBoundingClientRect();
+    pointer.x = e.clientX - r.left; pointer.y = e.clientY - r.top;
+  });
+  const reset = () => { pointer.x = -9999; pointer.y = -9999; };
+  frame.addEventListener('pointerleave', reset);
+  frame.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') setTimeout(reset, 250); });
+  frame.addEventListener('pointercancel', reset);
+
+  // Schnelles Scrollen schüttelt die Pixel
+  if (lenis) lenis.on('scroll', ({ velocity }) => { scrollKick = Math.max(-5, Math.min(5, velocity * 0.18)); });
+
+  new ResizeObserver(() => {
+    const size = `${frame.clientWidth}x${frame.clientHeight}`;
+    if (size === lastSize) return;
+    lastSize = size;
+    layout();
+    retarget(words[index].icon);
+  }).observe(frame);
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+}
+
+/* ---------- Skills auf einer geschwungenen Linie (Curved Loop) ---------- */
+function curvedLoopHtml() {
+  return `
+    <section class="curved-loop" data-curved aria-label="Skills">
+      <p class="visually-hidden">${CONFIG.skills.map(esc).join(', ')}</p>
+      <svg class="curved-svg" aria-hidden="true" focusable="false">
+        <defs><path id="curve-path"/></defs>
+        <use href="#curve-path" class="curved-guide"/>
+        <text class="curved-measure"></text>
+        <text class="curved-text"><textPath href="#curve-path"></textPath></text>
+      </svg>
+    </section>`;
+}
+
+function initCurvedLoop() {
+  $$('[data-curved]').forEach((wrap) => {
+    const svg = $('svg', wrap);
+    const path = $('path', svg);
+    const guide = $('.curved-guide', svg);
+    const measure = $('.curved-measure', svg);
+    const textPath = $('textPath', svg);
+    const segment = CONFIG.skills
+      .map((s) => `<tspan>${esc(s)}</tspan><tspan class="curved-sep">  /  </tspan>`)
+      .join('');
+
+    let segLen = 1, offset = 0, dir = -1, boost = 0, dragging = false, lastX = 0, dragVel = 0;
+
+    const wrapOffset = () => {
+      while (offset <= -segLen) offset += segLen;
+      while (offset > 0) offset -= segLen;
+    };
+    const render = () => textPath.setAttribute('startOffset', offset.toFixed(1));
+
+    // Linie und Text an die Breite anpassen
+    function layout() {
+      const w = wrap.clientWidth, h = wrap.clientHeight;
+      svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+      const d = `M ${-w * 0.08} ${h * 0.62} C ${w * 0.28} ${h * 0.98}, ${w * 0.68} ${h * 0.2}, ${w * 1.08} ${h * 0.6}`;
+      path.setAttribute('d', d);
+      guide.setAttribute('transform', `translate(0 ${Math.round(h * 0.09)})`);
+      measure.innerHTML = segment;
+      segLen = measure.getComputedTextLength() || 1;
+      const copies = Math.ceil(path.getTotalLength() / segLen) + 2;
+      textPath.innerHTML = segment.repeat(copies);
+      wrapOffset();
+      render();
+    }
+
+    layout();
+    (document.fonts?.ready || Promise.resolve()).then(layout);
+    new ResizeObserver(layout).observe(wrap);
+
+    // Ziehen mit Maus oder Finger
+    wrap.addEventListener('pointerdown', (e) => {
+      dragging = true; lastX = e.clientX; dragVel = 0;
+      wrap.setPointerCapture(e.pointerId);
+    });
+    wrap.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      dragVel = e.clientX - lastX; lastX = e.clientX;
+      offset += dragVel; wrapOffset(); render();
+    });
+    const release = () => {
+      if (!dragging) return;
+      dragging = false;
+      if (Math.abs(dragVel) > 0.5) { dir = dragVel < 0 ? -1 : 1; boost = Math.min(Math.abs(dragVel), 16); }
+    };
+    wrap.addEventListener('pointerup', release);
+    wrap.addEventListener('pointercancel', release);
+
+    if (!canAnimate) return; // ohne Bewegung: steht still, lässt sich aber ziehen
+
+    // Läuft von selbst, wird beim Scrollen schneller (Scroll Velocity)
+    let visible = true;
+    new IntersectionObserver(([en]) => { visible = en.isIntersecting; }).observe(wrap);
+    gsap.ticker.add((time, deltaTime) => {
+      if (!visible || dragging) return;
+      offset += dir * (1 + boost) * deltaTime * 0.06;
+      boost *= 0.94;
+      wrapOffset();
+      render();
+    });
+    lenis?.on('scroll', ({ velocity }) => {
+      if (Math.abs(velocity) < 0.2) return;
+      dir = velocity > 0 ? -1 : 1;
+      boost = Math.min(Math.abs(velocity) * 0.8, 14);
+    });
   });
 }
 
@@ -1567,7 +1775,7 @@ function initReveals() {
   ScrollTrigger.batch(els, {
     start: 'top 92%',
     once: true,
-    onEnter: (batch) => gsap.to(batch, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', stagger: 0.08, overwrite: true }),
+    onEnter: (batch) => gsap.to(batch, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', stagger: 0.08, overwrite: 'auto' }),
   });
 }
 
@@ -1579,23 +1787,6 @@ function initCurtains() {
     gsap.fromTo(img,
       { clipPath: 'inset(100% 0% 0% 0%)', scale: 1.15 },
       { clipPath: 'inset(0% 0% 0% 0%)', scale: 1, duration: 1.3, ease: 'power4.inOut', scrollTrigger: { trigger: box, start: 'top 88%', once: true } });
-  });
-}
-
-// Laufband, das beim Scrollen schneller wird (Scroll Velocity)
-function initMarquee() {
-  $$('[data-marquee]').forEach((marquee) => {
-    if (!canAnimate) { marquee.classList.add('is-static'); return; }
-    const track = $('.marquee-track', marquee);
-    const loop = gsap.to(track, { xPercent: -50, duration: 38, ease: 'none', repeat: -1 });
-    if (lenis) {
-      let direction = 1;
-      lenis.on('scroll', ({ velocity }) => {
-        if (velocity !== 0) direction = velocity > 0 ? 1 : -1;
-        const boost = Math.min(Math.abs(velocity) / 6, 5);
-        gsap.to(loop, { timeScale: direction * (1 + boost), duration: 0.4, overwrite: true });
-      });
-    }
   });
 }
 
@@ -1614,7 +1805,7 @@ function initMagnet() {
   });
 }
 
-/* ---------- Weiche Seitenwechsel ---------- */
+/* ---------- Seitenwechsel aus Pixel-Blöcken ---------- */
 const TRANSITION_KEY = 'bm-seitenwechsel';
 
 function initPageTransitions() {
@@ -1623,19 +1814,30 @@ function initPageTransitions() {
   let cameWithTransition = false;
   try { cameWithTransition = sessionStorage.getItem(TRANSITION_KEY) === '1'; sessionStorage.removeItem(TRANSITION_KEY); } catch (e) { /* egal */ }
 
-  const curtain = document.createElement('div');
-  curtain.className = 'page-curtain';
-  curtain.setAttribute('aria-hidden', 'true');
-  document.body.appendChild(curtain);
+  const overlay = document.createElement('div');
+  overlay.className = 'pixel-transition';
+  overlay.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(overlay);
 
-  // Vorhang ist nur während des Wechsels sichtbar
-  const hideCurtain = () => gsap.set(curtain, { yPercent: 100, autoAlpha: 0 });
-  if (cameWithTransition) {
-    gsap.fromTo(curtain, { yPercent: 0, autoAlpha: 1 }, { yPercent: -100, duration: 0.7, ease: 'power3.inOut', delay: 0.05, onComplete: hideCurtain });
-  } else {
-    hideCurtain();
+  // Raster aus Blöcken passend zum Bildschirm bauen
+  function buildCells() {
+    const size = window.innerWidth < 600 ? 56 : 88;
+    const cols = Math.ceil(window.innerWidth / size);
+    const rows = Math.ceil(window.innerHeight / size);
+    overlay.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    overlay.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+    overlay.innerHTML = Array.from({ length: cols * rows }, () => `<span${Math.random() < 0.12 ? ' class="is-accent"' : ''}></span>`).join('');
+    return $$('span', overlay);
   }
-  gsap.from('main', { opacity: 0, y: 14, duration: 0.6, ease: 'power2.out', delay: cameWithTransition ? 0.25 : 0 });
+  const hide = () => gsap.set(overlay, { autoAlpha: 0 });
+
+  if (cameWithTransition) {
+    const cells = buildCells();
+    gsap.set(overlay, { autoAlpha: 1 });
+    gsap.fromTo(cells, { scale: 1.02 }, { scale: 0, duration: 0.3, ease: 'power2.in', stagger: { amount: 0.5, from: 'random' }, delay: 0.05, onComplete: hide });
+  } else {
+    hide();
+  }
 
   document.addEventListener('click', (e) => {
     const link = e.target.closest('a[href]');
@@ -1648,23 +1850,92 @@ function initPageTransitions() {
     e.preventDefault();
     try { sessionStorage.setItem(TRANSITION_KEY, '1'); } catch (err) { /* egal */ }
     if (Layer.active) { Layer.active.el.hidden = true; }
-    gsap.fromTo(curtain, { yPercent: 100, autoAlpha: 1 }, {
-      yPercent: 0,
-      duration: 0.5,
-      ease: 'power3.inOut',
+    const cells = buildCells();
+    gsap.set(overlay, { autoAlpha: 1 });
+    gsap.fromTo(cells, { scale: 0 }, {
+      scale: 1.02,
+      duration: 0.25,
+      ease: 'power2.out',
+      stagger: { amount: 0.45, from: 'random' },
       onComplete: () => { location.href = url.href; },
     });
   });
 
-  // Zurück-Taste: Seite aus dem Cache ohne Vorhang zeigen
+  // Zurück-Taste: Seite aus dem Cache ohne Blöcke zeigen
   window.addEventListener('pageshow', (e) => {
     if (e.persisted) {
-      hideCurtain();
-      gsap.set('main', { opacity: 1, y: 0 });
+      hide();
       document.documentElement.style.overflow = '';
       lenis?.start();
     }
   });
+}
+
+/* ---------- Projektbild: Pixel decken das Bild ab (Pixel Transition) ---------- */
+function initPixelCovers() {
+  if (!canAnimate || !window.matchMedia('(pointer: fine)').matches) return;
+  $$('[data-pixel-cover]').forEach((media) => {
+    const grid = $('.pixel-cover-grid', media);
+    const label = $('.pixel-cover-label', media);
+    grid.innerHTML = Array.from({ length: 10 * 8 }, () => `<span${Math.random() < 0.14 ? ' class="is-accent"' : ''}></span>`).join('');
+    const cells = $$('span', grid);
+    gsap.set(cells, { opacity: 0 });
+    gsap.set(label, { opacity: 0 });
+    const card = media.closest('.project-card');
+
+    const show = () => {
+      gsap.to(cells, { opacity: 1, duration: 0.01, stagger: { amount: 0.3, from: 'random' }, overwrite: true });
+      gsap.to(label, { opacity: 1, duration: 0.2, delay: 0.25, overwrite: true });
+    };
+    const hideCover = () => {
+      gsap.to(label, { opacity: 0, duration: 0.15, overwrite: true });
+      gsap.to(cells, { opacity: 0, duration: 0.01, stagger: { amount: 0.3, from: 'random' }, overwrite: true });
+    };
+    card.addEventListener('pointerenter', show);
+    card.addEventListener('pointerleave', hideCover);
+  });
+}
+
+/* ---------- Kleine Titel «entschlüsseln» sich (Decrypted Text) ---------- */
+function initScramble() {
+  if (!canAnimate) return;
+  $$('[data-scramble]').forEach((el) => {
+    const text = el.textContent;
+    gsap.to(el, {
+      duration: 1.1,
+      ease: 'none',
+      scrambleText: { text, chars: 'lowerCase', speed: 0.6, revealDelay: 0.2 },
+      scrollTrigger: { trigger: el, start: 'top 92%', once: true },
+    });
+  });
+}
+
+/* ---------- Footer-Titel dehnt sich zur Maus hin (Text Pressure) ---------- */
+function initStretchTitle() {
+  const el = $('[data-stretch]');
+  if (!el || !canAnimate) return;
+  const split = SplitText.create(el, { type: 'words,chars' });
+  gsap.from(split.chars, {
+    yPercent: 60, opacity: 0, duration: 0.7, ease: 'power3.out', stagger: 0.025,
+    scrollTrigger: { trigger: el, start: 'top 90%', once: true },
+  });
+  if (!window.matchMedia('(pointer: fine)').matches) return;
+
+  const area = el.closest('.footer-cta');
+  const chars = split.chars.map((c) => ({
+    el: c,
+    scale: gsap.quickTo(c, 'scaleY', { duration: 0.35, ease: 'power3.out' }),
+  }));
+  gsap.set(split.chars, { transformOrigin: '50% 100%', display: 'inline-block' });
+
+  area.addEventListener('pointermove', (e) => {
+    chars.forEach((c) => {
+      const r = c.el.getBoundingClientRect();
+      const dist = Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2));
+      c.scale(1 + Math.max(0, 1 - dist / 170) * 0.55);
+    });
+  });
+  area.addEventListener('pointerleave', () => chars.forEach((c) => c.scale(1)));
 }
 
 /* ---------- Skip-Link: Fokus auf den Inhalt setzen ---------- */
@@ -1683,7 +1954,7 @@ function init() {
   Cart.load();
   if (canAnimate) {
     document.documentElement.classList.add('motion');
-    gsap.registerPlugin(ScrollTrigger, SplitText);
+    gsap.registerPlugin(ScrollTrigger, SplitText, ScrambleTextPlugin);
   }
 
   renderLayout();
@@ -1695,14 +1966,17 @@ function init() {
   initMenu();
   initCart();
   initSkipLink();
-  initScene();
+  initPixelHero();
   initConfigurator();
   initProjectFilter();
   renderOrderCart();
   Cart.onChange(renderOrderCart);
   initForms();
   initMagnet();
-  initMarquee();
+  initCurvedLoop();
+  initPixelCovers();
+  initScramble();
+  initStretchTitle();
   initCurtains();
   initReveals();
 
